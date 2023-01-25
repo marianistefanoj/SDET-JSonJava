@@ -1,21 +1,35 @@
 package com.TAE.SEDT.JsonJava;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+
+import org.json.simple.JSONObject;
 
 import com.TAE.SEDT.JsonJava.JavaObjectClass.CustomerDetails;
+import com.fasterxml.jackson.core.exc.StreamWriteException;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mysql.cj.protocol.Resultset;
 
 public class JsonToJava {
 
-	public static void main(String[] args) throws ClassNotFoundException, SQLException {
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, StreamWriteException, DatabindException, IOException {
 		//Database Connection
 		
 		//jdbc driver for connection with database
 		Class.forName("com.mysql.cj.jdbc.Driver");
+		
+		//declare CustomerDetails cd equal null and inside while rs has next create a new object of cd;
+		CustomerDetails cd = null;
+		
+		//arraylist to store the java objects from customerDetails (cd) 
+		ArrayList<CustomerDetails> cdList = new ArrayList<CustomerDetails>();
 		
 		//connection is null at this point
 		Connection conn = null;
@@ -27,7 +41,7 @@ public class JsonToJava {
 		Statement st = conn.createStatement();
 		
 		//resultset object receive statement.executequery after connect to the database
-		ResultSet rs = st.executeQuery("select *  from CustomerInfo where purchasedDate=CURDATE() and Location ='Asia' Limit 1;");
+		ResultSet rs = st.executeQuery("select *  from CustomerInfo where purchasedDate=CURDATE() and Location ='Asia';");
 		
 		
 		//while rs has next value then print the values (assuming that it has customerInfo has 4 columns)
@@ -41,36 +55,40 @@ public class JsonToJava {
 			System.out.println("-----------");
 		}*/
 		
-	
 		//while rs has next, will create each time an customerdetails object and will set the values from bd to the java object
 		while(rs.next()) {
-			CustomerDetails cd = new CustomerDetails();
+			//convert the resultset into a java object with POJO class implementation
+			
+			cd = new CustomerDetails();
 			cd.setCourseName(rs.getString(1));
 			cd.setLocation(rs.getString(2));
 			cd.setAmount(rs.getInt(3));
 			cd.setPurchasedDate(rs.getString(4));
+			//add the cd object into cdList (arraylist) 
+			cdList.add(cd);
 			
-			System.out.println("Printing data from the java object");
+			/*System.out.println("Printing data from the java object");
 			System.out.println("-----------");
 			System.out.println(cd.getCourseName());
 			System.out.println(cd.getLocation());
 			System.out.println(cd.getAmount());
-			System.out.println(cd.getLocation());
-			System.out.println("-----------");
+			System.out.println(cd.getPurchasedDate());
+			System.out.println("-----------");*/
 		}
 		
-		
-		
-		//convert the resultset into a java object with POJO class implementation
-		
-		
-		//build arraylist to store multiple results from db table
-		
-		
 		//create objects from each element of list
+		for(int i = 0; i < cdList.size(); i++) {
+			//convert java object into json file using jackson api
+			ObjectMapper obj = new ObjectMapper();
+			//args = jsonfile localtion , java object
+			String varNomeArquivo = "customerInfo";
+			obj.writeValue(new File("../SDET/" + varNomeArquivo + i + ".json"), cdList.get(i));
+			System.out.println("Arquivo " + varNomeArquivo + i + ".json, gerado com sucesso.");
+		}
 		
-		
-		//convert java object into json file using jackson api
+	
+		JSONObject JsObj = new JSONObject
+		JsObj.put("data", " javaobject "")args;
 		
 		
 		//send json file as input to the api automation test
